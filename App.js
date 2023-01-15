@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, FlatList } from 'react-native';
+import { StyleSheet, Text, View, FlatList, ActivityIndicator } from 'react-native';
 import { Searchbar, Card } from 'react-native-paper';
 
 const API_KEY = '183daca270264bad86fc5b72972fb82a'
@@ -22,7 +22,6 @@ function useDebounce(value, delay) {
 const fetchNews = (topic) => {
   return fetch(`https://newsapi.org/v2/everything?q=${topic}&from=2023-01-15&sortBy=popularity&apiKey=${API_KEY}`)
   .then(res => res.json())
-
 }
 
 export default function App() {
@@ -30,10 +29,24 @@ export default function App() {
   const debouncedSearchQuery = useDebounce(searchQuery, 400)
 
   const [news, setNews] = useState([])
-  const [loading, isLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isError, setIsError] = useState(false)
+
   useEffect(() => {
+    setIsLoading(true)
+    setIsError(false)
+    
     fetchNews(debouncedSearchQuery)
-    .then(data => setNews(data))
+    .then(data => {
+      setNews(data)
+      setIsLoading(false)
+    })
+    .catch((error) => {
+      console.log(error)
+      setIsError(true)
+      setIsLoading(false)
+      setNews([])
+    })
   }, [debouncedSearchQuery])
 
   return (
@@ -44,21 +57,22 @@ export default function App() {
         value={searchQuery}
         style={styles.searchBar}
       />
+      {isLoading && <ActivityIndicator/>}
+      {isError && <Text>Something went wrong. Please try again.</Text>}
       <FlatList
         data={news?.articles || []}
         renderItem={({item}) => {
           return (
-            <View  style={styles.newsItem}>
-              <Card>
-                <Card.Title title={item.title} subtitle={item.description}/>
-                <Card.Content>
-                  <Text variant="titleLarge">{item.content}</Text>
-                </Card.Content>
-                <Card.Cover source={{ uri: item.urlToImage }} />
-              </Card>
-            </View>
+            <Card style={styles.newsItem} mode='outlined'>
+              <Card.Title title={item.title} subtitle={item.description}/>
+              <Card.Content>
+                <Text variant="titleLarge">{item.content}</Text>
+              </Card.Content>
+              <Card.Cover style={styles.cardImage} source={{ uri: item.urlToImage }} />
+            </Card>
           )
-        }}
+        }
+      }
       />
     </View>
   );
@@ -77,5 +91,8 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     marginBottom: 10
+  },
+  cardImage: {
+    marginTop: 5,
   }
 });
