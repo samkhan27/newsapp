@@ -5,20 +5,36 @@ import { Searchbar, Card } from 'react-native-paper';
 
 const API_KEY = '183daca270264bad86fc5b72972fb82a'
 
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay || 500)
+
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [value, delay])
+
+  return debouncedValue
+}
+
 const fetchNews = (topic) => {
-  return fetch(`https://newsapi.org/v2/everything?q=Apple&from=2023-01-15&sortBy=popularity&apiKey=${API_KEY}`)
+  return fetch(`https://newsapi.org/v2/everything?q=${topic}&from=2023-01-15&sortBy=popularity&apiKey=${API_KEY}`)
   .then(res => res.json())
 
 }
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 400)
+
   const [news, setNews] = useState([])
   const [loading, isLoading] = useState(true)
   useEffect(() => {
-    fetchNews()
+    fetchNews(debouncedSearchQuery)
     .then(data => setNews(data))
-  }, [])
+  }, [debouncedSearchQuery])
 
   return (
     <View style={styles.container}>
