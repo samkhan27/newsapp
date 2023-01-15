@@ -67,6 +67,8 @@ export default function App() {
               <Card.Title title={item.title} subtitle={item.description}/>
               <Card.Content>
                 <Text variant="titleLarge">{item.content}</Text>
+                <Text variant="bodyMedium">source: {item.source.name}</Text>
+                <Text variant="bodyMedium">author: {item.author}</Text>
               </Card.Content>
               <Card.Cover style={styles.cardImage} source={{ uri: item.urlToImage }} />
             </Card>
